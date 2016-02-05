@@ -53,7 +53,8 @@
         function refreshStyle() {
             var count = dw.graphs.length;
             if (count) {
-                clearStyle();
+                //clearStyle();
+                graphs.forEach(function(g){g.container.style.width='';});
                 var size = tableSize(count);
                 var r = size.row, c = size.col;
                 var ruleCommon = getRuleSellector(dw.styleSheet, "#chartsContainer svg");
@@ -62,14 +63,11 @@
                     ruleCommon.style.height = Math.floor(1 / r * 100) + '%'
                 }
                 if (size.col * size.row > count) {
-                    //var ruleLastRow = getRuleSellector(dw.styleSheet, ".last-row");
-                    //ruleLastRow.style.width = Math.floor(1 / (count) % (c * (r - 1)) * 100) + '%';
                     dw.graphs.slice(c * (r - 1)).forEach(function (w) {
                         return function (g, i) {
-                            dw.addStyleRule('svg#' + g.container.id, "width:" + w)
-                            //g.container.classList.add("last-row");
+                            g.container.style.width = w;
                         }
-                    } (Math.floor(1 / (count) % (c * (r - 1)) * 100) + '%'));
+                    } (Math.floor(100 / ((count) % (c * (r - 1)))) + '%'));
                 }
                 dw.graphs.forEach(function (g) {
                     g.update();
@@ -306,16 +304,16 @@
                         global.nvlib.onload = callback;
                         document.head.appendChild(global.nvlib);
                         (function () {
-            var rules = {
-                "html, body, div":"margin: 0px;padding: 0px;",
-                "#chartsContainer svg": "position: relative;min-height: 1px;padding-right: 0px;padding-left: 0px;float: left;height: 45%;width:30%;",
-                "#chartsContainer": "overflow:hidden;width: 100%;",
-                ".last-row":"width:30%;"
-            };
-            for (var sl in rules) {
-                dw.addStyleRule(sl, rules[sl]);
-            }
-        })();
+                            var rules = {
+                                "html, body, div": "margin: 0px;padding: 0px;",
+                                "#chartsContainer svg": "position: relative;min-height: 1px;padding-right: 0px;padding-left: 0px;float: left;height: 45%;width:30%;",
+                                "#chartsContainer": "overflow:hidden;width: 100%;",
+                                ".last-row": "width:30%;"
+                            };
+                            for (var sl in rules) {
+                                dw.addStyleRule(sl, rules[sl]);
+                            }
+                        })();
                     } else {
                         (function ff() {
                             if (global.d3 && global.nv) {
