@@ -1,49 +1,6 @@
 (function (global) {
-    var chartId = 0;
+    var _chartId = 0;
     var chartsContainer;
-
-function OnCalcPrime(numb)
-{
-	var s = [];
-	console.time('Calc:');
-	if (!isNaN(numb)){
-		if (numb > 0 && Math.round(numb) == numb) {
-			var prime = 2;
-			var temp = numb;
-			var isPrime = true;
-			
-			while (prime <= (Math.sqrt(temp) + 1)){
-				if (temp % prime == 0) {
-					s.push(prime);
-					isPrime = false;
-					
-					temp = Math.round(temp / prime);
-				}
-				else {
-					prime++;
-				}
-			}
-			
-			if (isPrime) {
-				s.push(numb + " - is prime");
-			}
-			else {
-				if (temp > 1) {
-					s.push(temp);
-				}
-			}
-		}
-		else{
-			console.log("Число должно быть целым и не отрицательным");
-		}
-	}
-	else{
-		console.log("Это не число");
-	}
-console.timeEnd('Calc:');
-return s;
-};
-global.OnCalcPrime=OnCalcPrime;
 
     var dw;
     (function (dw) {
@@ -65,16 +22,61 @@ global.OnCalcPrime=OnCalcPrime;
             else console.warn('addStyleRule failed');
         };
         dw.addStyleRule = addStyleRule;
-        (function () {
-            var rules = {
-                "html, body, div":"margin: 0px;padding: 0px;",
-                "#chartsContainer svg": "position: relative;min-height: 1px;padding-right: 0px;padding-left: 0px;float: left;height: 45%;width:30%;",
-                "#chartsContainer": "overflow:hidden;width: 100%;"
-            };
-            for (var sl in rules) {
-                dw.addStyleRule(sl, rules[sl]);
+                
+        function tableSize(count) {
+            var r = Math.sqrt(window.innerHeight * count / window.innerWidth);
+            r = Math.floor(r) == r ? r : Math.floor(r) + 1;
+            var c = count / r;
+            c = Math.floor(c) == c ? c : Math.floor(c) + 1;
+            return { col: c, row: r };
+        }
+        dw.tableSize=tableSize;
+        function getRuleSellectorAll(styleSheet, selector){
+            return Array.prototype.filter.call(styleSheet.rules,
+                (function (filter) {
+                    return function (r) {
+                        return r.selectorText === filter;
+                    }
+                })(selector))
+        }
+        function getRuleSellector(styleSheet, selector) {
+            return getRuleSellectorAll(styleSheet, selector)[0]||null;
+        }
+        function clearStyle() {
+            Array.prototype.forEach.call(dw.styleSheet.rules,
+                function (v, i, a) {
+                    if (v.selectorText.match(/#chart\d+/)) {
+                        dw.styleSheet.removeRule(i);
+                    }
+                });
+        }
+        function refreshStyle() {
+            var count = dw.graphs.length;
+            if (count) {
+                clearStyle();
+                var size = tableSize(count);
+                var r = size.row, c = size.col;
+                var ruleCommon = getRuleSellector(dw.styleSheet, "#chartsContainer svg");
+                if (ruleCommon && ruleCommon.style) {
+                    ruleCommon.style.width = Math.floor(1 / c * 100) + '%';
+                    ruleCommon.style.height = Math.floor(1 / r * 100) + '%'
+                }
+                if (size.col * size.row > count) {
+                    //var ruleLastRow = getRuleSellector(dw.styleSheet, ".last-row");
+                    //ruleLastRow.style.width = Math.floor(1 / (count) % (c * (r - 1)) * 100) + '%';
+                    dw.graphs.slice(c * (r - 1)).forEach(function (w) {
+                        return function (g, i) {
+                            dw.addStyleRule('svg#' + g.container.id, "width:" + w)
+                            //g.container.classList.add("last-row");
+                        }
+                    } (Math.floor(1 / (count) % (c * (r - 1)) * 100) + '%'));
+                }
+                dw.graphs.forEach(function (g) {
+                    g.update();
+                });
             }
-        })();
+        }
+        dw.refreshStyle = refreshStyle;
         
         //Методы преобразования приходящих данных к формату внешней библиотеки
         var adapters;
@@ -142,7 +144,7 @@ global.OnCalcPrime=OnCalcPrime;
         dw.graphs = graphs;
         var charts;
         (function (charts) {
-            function appendToGraphList(graph){dw.graphs.push(graph);}
+            function appendToGraphList(graph){dw.graphs.push(graph); dw.refreshStyle()}
             
             function Histogram(i, data) {
                 nv.addGraph( function () {
@@ -303,6 +305,17 @@ global.OnCalcPrime=OnCalcPrime;
                         global.nvlib.src = 'nv.d3.js';
                         global.nvlib.onload = callback;
                         document.head.appendChild(global.nvlib);
+                        (function () {
+            var rules = {
+                "html, body, div":"margin: 0px;padding: 0px;",
+                "#chartsContainer svg": "position: relative;min-height: 1px;padding-right: 0px;padding-left: 0px;float: left;height: 45%;width:30%;",
+                "#chartsContainer": "overflow:hidden;width: 100%;",
+                ".last-row":"width:30%;"
+            };
+            for (var sl in rules) {
+                dw.addStyleRule(sl, rules[sl]);
+            }
+        })();
                     } else {
                         (function ff() {
                             if (global.d3 && global.nv) {
@@ -329,7 +342,7 @@ global.OnCalcPrime=OnCalcPrime;
     function draw() {
         var _self = this;
         function createChartElement() {
-            var chId = chartId++;
+            var chId = _chartId++;
             chartsContainer = chartsContainer
             || document.getElementById("chartsContainer")
             || (function () {
@@ -381,7 +394,7 @@ global.OnCalcPrime=OnCalcPrime;
                     console.log('Unavalible chart');
                     break;
             }
-            console.log("Prime muls:",OnCalcPrime(document.querySelectorAll("#chartsContainer svg").length));
+            //dw.refreshStyle();
         }
 
         console.log('Drawing chart type: ', TypeChart[detectType(this)]);
