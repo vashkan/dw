@@ -2,6 +2,49 @@
     var chartId = 0;
     var chartsContainer;
 
+function OnCalcPrime(numb)
+{
+	var s = [];
+	console.time('Calc:');
+	if (!isNaN(numb)){
+		if (numb > 0 && Math.round(numb) == numb) {
+			var prime = 2;
+			var temp = numb;
+			var isPrime = true;
+			
+			while (prime <= (Math.sqrt(temp) + 1)){
+				if (temp % prime == 0) {
+					s.push(prime);
+					isPrime = false;
+					
+					temp = Math.round(temp / prime);
+				}
+				else {
+					prime++;
+				}
+			}
+			
+			if (isPrime) {
+				s.push(numb + " - is prime");
+			}
+			else {
+				if (temp > 1) {
+					s.push(temp);
+				}
+			}
+		}
+		else{
+			console.log("Число должно быть целым и не отрицательным");
+		}
+	}
+	else{
+		console.log("Это не число");
+	}
+console.timeEnd('Calc:');
+return s;
+};
+global.OnCalcPrime=OnCalcPrime;
+
     var dw;
     (function (dw) {
         function addStyleRule(selector, styleString) {
@@ -24,16 +67,18 @@
         dw.addStyleRule = addStyleRule;
         (function () {
             var rules = {
-                "#chartsContainer svg": "position: relative;min-height: 1px;padding-right: 15px;padding-left: 15px;float: left;height: 45%;width:45%;",
+                "html, body, div":"margin: 0px;padding: 0px;",
+                "#chartsContainer svg": "position: relative;min-height: 1px;padding-right: 0px;padding-left: 0px;float: left;height: 45%;width:30%;",
                 "#chartsContainer": "overflow:hidden;width: 100%;"
             };
             for (var sl in rules) {
                 dw.addStyleRule(sl, rules[sl]);
             }
         })();
+        
+        //Методы преобразования приходящих данных к формату внешней библиотеки
         var adapters;
         (function (adapters) {
-            //Гистограммы
             function toHistogram(input_data) {
 
                 var dat = {};
@@ -92,11 +137,15 @@
 
 
         })(adapters = dw.adapters || (dw.adapters = {}));
-
+        
+        var graphs=[];
+        dw.graphs = graphs;
         var charts;
         (function (charts) {
+            function appendToGraphList(graph){dw.graphs.push(graph);}
+            
             function Histogram(i, data) {
-                return function () {
+                nv.addGraph( function () {
                     var chart = nv.models.discreteBarChart()
                         .x(function (d) { return d.label })
                         .y(function (d) { return d.value })
@@ -111,89 +160,75 @@
 
                     nv.utils.windowResize(chart.update);
                     return chart;
-                }
-            };
+                },appendToGraphList);
+            }
             charts.Histogram = Histogram;
 
             function Scatter(i, data) {
-                return function () {
+                nv.addGraph(function () {
 
                     var chart = nv.models.scatterChart()
-                        .margin({ top: 20, right: 20, bottom: 20, left: 30 })
                         .pointSize(function (d) {
                             return d.r
                         })
                         .showDistX(true)
                         .showDistY(true)
                         .duration(300)
-                        .useVoronoi(true)
                         .color(d3.scale.category10().range());
 
 
-                    chart.xAxis.tickFormat(d3.format('.02f'));
-                    chart.yAxis.tickFormat(d3.format('.02f'));
+                    chart.xAxis.tickFormat(d3.format('.2f'));
+                    chart.yAxis.tickFormat(d3.format('.2f'));
 
 
                     d3.select('#chart' + i)
                         .datum(data)
-                    //.transition().duration(100)
                         .call(chart);
 
                     nv.utils.windowResize(chart.update);
                     return chart;
-                }
+                },appendToGraphList);
             };
             charts.Scatter = Scatter;
 
             function Line(i, data) {
-                return function () {
-                    var width = chartsContainer.clientWidth - 40,
-                        height = chartsContainer.clientHeight - 40;
-
+                nv.addGraph(function () {
                     var chart = nv.models.lineChart()
-                    //.width(width)
-                    //.height(height)
-                        .margin({ top: 20, right: 30, bottom: 20, left: 30 });
-
                     chart.dispatch.on('renderEnd', function () {
-                        console.log('render complete');
+                        console.log('render line chart complete');
                     });
                     chart.xAxis.tickFormat(d3.format('.02f'));
                     chart.yAxis.tickFormat(d3.format('.02f'));
                     d3.select('#chart' + i)
-                    //.attr('width', width)
-                    //.attr('height', height)
                         .datum(data)
                         .call(chart);
                     nv.utils.windowResize(chart.update);
                     return chart;
-                }
+                },appendToGraphList);
             };
             charts.Line = Line;
 
             function StackedBar(i, data) {
-                return function () {
+                nv.addGraph( function () {
 
                     var chart = nv.models.multiBarChart()
                         .barColor(d3.scale.category20().range())
                         .stacked(true)
+                        .options({showControls:false})
                         .duration(250)
-                        .margin({ bottom: 30, left: 20 })
-                        .rotateLabels(45)
-                        .groupSpacing(0.1)
+                        .rotateLabels(360)
+                        .groupSpacing(0.3)
                         ;
 
                     chart.reduceXTicks(false).staggerLabels(true);
 
                     chart.xAxis
-                    //.axisLabel("")
                         .axisLabelDistance(5)
                         .showMaxMin(false)
-                        .tickFormat(d3.format(',.2f'))
+                        .tickFormat(d3.format(',.0f'))
                     ;
 
                     chart.yAxis
-                    //.axisLabel("")
                         .axisLabelDistance(-5)
                         .tickFormat(d3.format(',.01f'))
                     ;
@@ -216,12 +251,11 @@
                     });
 
                     return chart;
-                }
+                },appendToGraphList);
             }
             charts.StackedBar = StackedBar;
 
         })(charts = dw.charts || (dw.charts = {}));
-        var graph=[];
     })(dw = dw || {});
 
     var TypeChart;
@@ -325,28 +359,29 @@
                 case TypeChart.Line:
                     chId = createChartElement();
                     data = dw.adapters.toLine(_self);
-                    nv.addGraph(dw.charts.Line(chId, data));
+                    dw.charts.Line(chId, data);
 
                     break;
                 case TypeChart.Scatter:
                     chId = createChartElement();
                     data = dw.adapters.toScatter(_self);
-                    nv.addGraph(dw.charts.Scatter(chId, data));
+                    dw.charts.Scatter(chId, data);
                     break;
                 case TypeChart.Histogram:
                     chId = createChartElement();
                     data = dw.adapters.toHistogram(_self);
-                    nv.addGraph(dw.charts.Histogram(chId, data));
+                    dw.charts.Histogram(chId, data);
                     break;
                     case TypeChart.StackedBar:
                     chId = createChartElement();
                     data = dw.adapters.toStackedBar(_self);
-                     nv.addGraph(dw.charts.StackedBar(chId, data));
+                    dw.charts.StackedBar(chId, data);
                     break;
                 default:
                     console.log('Unavalible chart');
                     break;
             }
+            console.log("Prime muls:",OnCalcPrime(document.querySelectorAll("#chartsContainer svg").length));
         }
 
         console.log('Drawing chart type: ', TypeChart[detectType(this)]);
