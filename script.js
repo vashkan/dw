@@ -20,7 +20,7 @@
                 styleSheet.addRule(selector, styleString, 0);
             }
             else console.warn('addStyleRule failed');
-        };
+        }
         dw.addStyleRule = addStyleRule;
                 
         function tableSize(count) {
@@ -36,8 +36,8 @@
                 (function (filter) {
                     return function (r) {
                         return r.selectorText === filter;
-                    }
-                })(selector))
+                    };
+                })(selector));
         }
         function getRuleSellector(styleSheet, selector) {
             return getRuleSellectorAll(styleSheet, selector)[0]||null;
@@ -60,13 +60,13 @@
                 var ruleCommon = getRuleSellector(dw.styleSheet, "#chartsContainer svg");
                 if (ruleCommon && ruleCommon.style) {
                     ruleCommon.style.width = Math.floor(1 / c * 100) + '%';
-                    ruleCommon.style.height = Math.floor(1 / r * 100) + '%'
+                    ruleCommon.style.height = Math.floor(1 / r * 100) + '%';
                 }
                 if (size.col * size.row > count) {
                     dw.graphs.slice(c * (r - 1)).forEach(function (w) {
                         return function (g, i) {
                             g.container.style.width = w;
-                        }
+                        };
                     } (Math.floor(100 / ((count) % (c * (r - 1)))) + '%'));
                 }
                 dw.graphs.forEach(function (g) {
@@ -95,13 +95,13 @@
                     data[0].values.push({ "label": l, "value": dat[l] });
                 }
                 return data;
-            };
+            }
             adapters.toHistogram = toHistogram;
 
 
             function toScatter(input_data) {
                 return [{ key: 'Data ', values: input_data }];
-            };
+            }
             adapters.toScatter = toScatter;
 
 
@@ -111,28 +111,28 @@
                     var dat = input_data[k].map(function (v, i) {
                         return { x: i, y: v };
                     });
-                    data.push({ key: k, values: dat })
+                    data.push({ key: k, values: dat });
                 }
                 return data;
-            };
+            }
             adapters.toLine = toLine;
 
 
             function toStackedBar(input_data) {
                 var data = [];
                 if (input_data.length > 0) {
-                    var maxlen = input_data.reduce(function (maxlen, v) { return Math.max(maxlen, v.length - 1) }, 0);
+                    var maxlen = input_data.reduce(function (maxlen, v) { return Math.max(maxlen, v.length - 1); }, 0);
 
                     data=input_data.map(function (element, index) {
                         return { 
                             key: element[0], 
                         values: element.slice(1,maxlen+1)
-                        .slice(0,maxlen).concat((Array(Math.abs(maxlen-Math.min(element.length-1,maxlen))+1).join(",0").split(",").splice(1).map(function(v){return Number(v)})))
+                        .slice(0,maxlen).concat((Array(Math.abs(maxlen-Math.min(element.length-1,maxlen))+1).join(",0").split(",").splice(1).map(function(v){return Number(v);})))
                         .map(function(val,ind){return {x:ind,y:val};})};
                     });
                 }
                 return data;
-            };
+            }
             adapters.toStackedBar = toStackedBar;
 
 
@@ -142,15 +142,17 @@
         dw.graphs = graphs;
         var charts;
         (function (charts) {
-            function appendToGraphList(graph){dw.graphs.push(graph); dw.refreshStyle()}
+            function appendToGraphList(graph) {
+                dw.graphs.push(graph);
+                dw.refreshStyle();
+            }
             
             function Histogram(i, data) {
                 nv.addGraph( function () {
                     var chart = nv.models.discreteBarChart()
-                        .x(function (d) { return d.label })
-                        .y(function (d) { return d.value })
+                        .x(function (d) { return d.label; })
+                        .y(function (d) { return d.value; })
                         .staggerLabels(true)
-                    //.staggerLabels(historicalBarChart[0].values.length > 8)
                         .showValues(true)
                         .duration(250);
 
@@ -169,7 +171,7 @@
 
                     var chart = nv.models.scatterChart()
                         .pointSize(function (d) {
-                            return d.r
+                            return d.r;
                         })
                         .showDistX(true)
                         .showDistY(true)
@@ -188,12 +190,12 @@
                     nv.utils.windowResize(chart.update);
                     return chart;
                 },appendToGraphList);
-            };
+            }
             charts.Scatter = Scatter;
 
             function Line(i, data) {
                 nv.addGraph(function () {
-                    var chart = nv.models.lineChart()
+                    var chart = nv.models.lineChart();
                     chart.dispatch.on('renderEnd', function () {
                         console.log('render line chart complete');
                     });
@@ -205,7 +207,7 @@
                     nv.utils.windowResize(chart.update);
                     return chart;
                 },appendToGraphList);
-            };
+            }
             charts.Line = Line;
 
             function StackedBar(i, data) {
@@ -260,11 +262,11 @@
 
     var TypeChart;
     (function (TypeChart) {
-        TypeChart[TypeChart["Unknown"] = 0] = "Unknown";
-        TypeChart[TypeChart["Histogram"] = 1] = "Histogram";
-        TypeChart[TypeChart["Scatter"] = 2] = "Scatter";
-        TypeChart[TypeChart["Line"] = 3] = "Line";
-        TypeChart[TypeChart["StackedBar"] = 4] = "StackedBar";
+        TypeChart[TypeChart.Unknown = 0] = "Unknown";
+        TypeChart[TypeChart.Histogram = 1] = "Histogram";
+        TypeChart[TypeChart.Scatter = 2] = "Scatter";
+        TypeChart[TypeChart.Line = 3] = "Line";
+        TypeChart[TypeChart.StackedBar = 4] = "StackedBar";
     })(TypeChart || (TypeChart = {}));
     function detectType(obj) {
         if (obj instanceof Array) {
@@ -319,11 +321,11 @@
                             if (global.d3 && global.nv) {
                                 callback();
                             } else {
-                                setTimeout(ff, 100)
+                                setTimeout(ff, 100);
                             }
                         })();
                     }
-                }
+                };
             })(callback);
             document.head.appendChild(global.d3lib);
         } else {
@@ -331,7 +333,7 @@
                 if (global.d3 && global.nv) {
                     callback();
                 } else {
-                    setTimeout(ff, 100)
+                    setTimeout(ff, 100);
                 }
             })();
         }
@@ -341,24 +343,24 @@
         var _self = this;
         function createChartElement() {
             var chId = _chartId++;
-            chartsContainer = chartsContainer
-            || document.getElementById("chartsContainer")
-            || (function () {
+            chartsContainer = chartsContainer ||
+            document.getElementById("chartsContainer") ||
+            (function () {
                 var re = document.createElement('div');
                 re.id = 'chartsContainer';
                 re.style.cssText = "overflow:hidden; width: 100%;";
                 re.style.height = (window.innerHeight - 16) + 'px';
-                document.body.appendChild(re)
+                document.body.appendChild(re);
                 window.onresize = function () {
                     re.style.height = (window.innerHeight - 16) + 'px';
                     re.style.width = (window.innerWidth - 16) + 'px';
-                }
+                };
                 return document.body.appendChild(re), re;
             })();
             chartsContainer.appendChild((function (i) {
-                var el = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+                var el = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                 el.id = "chart" + i;
-                return el
+                return el;
             })(chId));
             return chId;
         }
